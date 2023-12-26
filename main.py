@@ -20,16 +20,40 @@ class ReseauNeuronal(nn.Module):
         x = F.relu(x)
         return self.couche_connectee_3(x)
 
-import gymnasium as gym
+#Mise en place de l'environnement et récupération des informations sur l'état et les actions
 
-env = gym.make("LunarLander-v2", render_mode="human")
-observation, info = env.reset()
+import gym
+env = gym.make("LunarLander-v2")
+forme_etat = env.observation_space.shape
+print("Forme de l'état =", forme_etat)
+taille_etat = env.observation_space.shape[0]
+print("Taille de l'état =", taille_etat)
+nb_actions = env.action_space.n
+print("Nombre d'actions =", nb_actions)
 
-for _ in range(1000):
-    action = env.action_space.sample()  # agent policy that uses the observation and info
-    observation, reward, terminated, truncated, info = env.step(action)
+#Initialisation des hyperparamètres
 
-    if terminated or truncated:
-        observation, info = env.reset()
+taux_apprentissage = 5e-4
+taille_mini_batch = 100
+facteur_discount = 0.98
+taille_memoire_replay = int(1e5)
+parametre_interpolation = 1e-3
 
-env.close()
+#Mise en place du replay memory
+
+class MemoireReplay(object):
+
+
+
+    """Initialisation du replay memory"""
+    def __init__(self, capacite):
+        self.appareil = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.capacite = capacite
+        self.memoire = []
+
+    """Ajout d'un événement dans le replay memory"""
+    def push(self, evenement):
+        self.memoire.append(evenement)
+        if len(self.memoire) > self.capacite:
+            del self.memoire[0]
+
