@@ -57,3 +57,26 @@ class MemoireReplay(object):
         if len(self.memoire) > self.capacite:
             del self.memoire[0]
 
+    def echantillon(self, taille_batch):
+        experiences = random.sample(self.memoire, k=taille_batch)
+        etats = torch.from_numpy(np.vstack([e[0] for e in experiences if e is not None])).float().to(self.appareil)
+        actions = torch.from_numpy(np.vstack([e[1] for e in experiences if e is not None])).long().to(self.appareil)
+        recompenses = torch.from_numpy(np.vstack([e[2] for e in experiences if e is not None])).float().to(self.appareil)
+        etats_suivants = torch.from_numpy(np.vstack([e[3] for e in experiences if e is not None])).float().to(self.appareil)
+        termines = torch.from_numpy(np.vstack([e[4] for e in experiences if e is not None]).astype(np.uint8)).float().to(self.appareil)
+        return etats, etats_suivants, actions, recompenses, termines
+
+"""Implémentation de la classe DQN"""
+
+class Agent():
+
+    def __init__(self, taille_etat, taille_action):
+        self.appareil = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.taille_etat = taille_etat
+        self.taille_action = taille_action
+        self.reseau_local_Q = ReseauNeuronal(taille_etat, taille_action).to(self.appareil)
+        self.reseau_cible_Q = ReseauNeuronal(taille_etat, taille_action).to(self.appareil)
+        self.optimiseur = optim.Adam(self.reseau_local_Q.parameters(), lr=taux_apprentissage)
+        self.memoire = MemoireReplay(taille_memoire_replay)
+        self.etapes_temps = 0
+
