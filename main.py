@@ -162,3 +162,49 @@ for episode in range(1, num_episodes + 1):
                                                                            np.mean(scores_sur_100_episodes)))
         torch.save(agent.reseau_local_Q.state_dict(), 'checkpoint.pth')
         break
+
+"""Visualizing the results"""
+
+import glob
+import io
+import base64
+import imageio
+from IPython.display import HTML, display
+from gym.wrappers.monitoring.video_recorder import VideoRecorder
+
+import gym
+import imageio
+import glob
+import io
+import base64
+from IPython.display import HTML
+
+def afficher_video_du_modele(agent, nom_env):
+    env = gym.make(nom_env, render_mode='rgb_array')
+    etat, _ = env.reset()
+    termine = False
+    images = []
+    while not termine:
+        image = env.render()
+        images.append(image)
+        action = agent.agir(etat)
+        etat, recompense, termine, _, _ = env.step(action)
+    env.close()
+    imageio.mimsave('video.mp4', images, fps=30)
+
+afficher_video_du_modele(agent, 'LunarLander-v2')
+
+def afficher_video():
+    mp4list = glob.glob('*.mp4')
+    if len(mp4list) > 0:
+        mp4 = mp4list[0]
+        video = io.open(mp4, 'r+b').read()
+        encode = base64.b64encode(video)
+        display(HTML(data='''<video alt="test" autoplay
+                loop controls style="height: 400px;">
+                <source src="data:video/mp4;base64,{0}" type="video/mp4" />
+             </video>'''.format(encode.decode('ascii'))))
+    else:
+        print("Impossible de trouver la vidéo")
+
+afficher_video()
